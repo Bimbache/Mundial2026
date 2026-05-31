@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -302,7 +303,7 @@ async function buscarNoticias(eq1,eq2){
   nb.style.display="block";
   nb.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:rgba(0,180,100,.08);border:1px solid rgba(0,180,100,.2);border-radius:8px;padding:8px 12px;margin-bottom:10px"><div style="width:12px;height:12px;border:2px solid ${C.green};border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0"></div><span style="font-size:10px;color:${C.green};font-family:'Barlow',sans-serif">Buscando lesiones y bajas...</span></div>`;
   try{
-    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,system:"Analista fútbol. Responde SOLO en JSON sin texto extra.",tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`Busca noticias últimas 72h sobre ${eq1} y ${eq2} Mundial 2026: lesiones, bajas, sanciones. JSON:\n{"bajas1":["jugador(motivo)"],"bajas2":["jugador(motivo)"],"factor1":1.0,"factor2":1.0,"resumen":"1 línea"}\nfactor=multiplicador xG (1.0=sin cambios,0.85=baja importante,0.93=moderada)`}]})});
+    const r=await fetch("/.netlify/functions/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,system:"Analista fútbol. Responde SOLO en JSON sin texto extra.",tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`Busca noticias últimas 72h sobre ${eq1} y ${eq2} Mundial 2026: lesiones, bajas, sanciones. JSON:\n{"bajas1":["jugador(motivo)"],"bajas2":["jugador(motivo)"],"factor1":1.0,"factor2":1.0,"resumen":"1 línea"}\nfactor=multiplicador xG (1.0=sin cambios,0.85=baja importante,0.93=moderada)`}]})});
     const d=await r.json();
     const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"{}";
     let parsed;try{parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());}catch{parsed={bajas1:[],bajas2:[],factor1:1.0,factor2:1.0,resumen:"Sin noticias relevantes."};}
@@ -411,7 +412,7 @@ async function pedirAI(){
   const b1=BASE[e1]||{},b2=BASE[e2]||{};
   const bajas=[...(currentNews?.bajas1||[]).map(b=>`${e1}: ${b}`),...(currentNews?.bajas2||[]).map(b=>`${e2}: ${b}`)];
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:600,system:"Analista fútbol Mundial 2026. Español conciso, sin asteriscos.",messages:[{role:"user",content:`${fl(e1)} ${e1} vs ${fl(e2)} ${e2} · Mundial 2026\nELO ${b1.elo}vs${b2.elo} · xG ${b1.xG}vs${b2.xG} · λ ${r.l1}vs${r.l2}\n${bajas.length?"Bajas: "+bajas.join(", "):""}\n1X2: ${r.p1}/${r.emp}/${r.p2}% · Goles: ${r.g1}-${r.g2} · ${r.marc}(${r.marcP}%)\nO/U 2.5: ${r.ou[2].over}% · BTTS: ${r.btts}%\n1)Táctica+bajas(2 líneas) 2)Factores clave(2 líneas) 3)Predicción final(1 línea)`}]})});
+    const resp=await fetch("/.netlify/functions/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:600,system:"Analista fútbol Mundial 2026. Español conciso, sin asteriscos.",messages:[{role:"user",content:`${fl(e1)} ${e1} vs ${fl(e2)} ${e2} · Mundial 2026\nELO ${b1.elo}vs${b2.elo} · xG ${b1.xG}vs${b2.xG} · λ ${r.l1}vs${r.l2}\n${bajas.length?"Bajas: "+bajas.join(", "):""}\n1X2: ${r.p1}/${r.emp}/${r.p2}% · Goles: ${r.g1}-${r.g2} · ${r.marc}(${r.marcP}%)\nO/U 2.5: ${r.ou[2].over}% · BTTS: ${r.btts}%\n1)Táctica+bajas(2 líneas) 2)Factores clave(2 líneas) 3)Predicción final(1 línea)`}]})});
     const d=await resp.json();
     const txt=d.content?.find(b=>b.type==="text")?.text||"Sin respuesta.";
     document.getElementById("ai-box").innerHTML=`<div style="background:rgba(21,101,192,.1);border:1px solid rgba(21,101,192,.3);border-radius:8px;padding:12px" class="fade"><div style="font-size:8px;letter-spacing:2px;color:${C.blue};margin-bottom:8px;font-family:'Barlow',sans-serif">🤖 ANÁLISIS · CLAUDE</div><div style="font-size:11px;line-height:1.7;font-family:'Barlow',sans-serif;color:#c4d9f0;white-space:pre-line">${txt}</div></div>`;
@@ -524,7 +525,7 @@ async function pedirComboAI(){
   const resumen=combinada.map(ap=>`${ap.e1} vs ${ap.e2}: ${ap.label} (${ap.prob.toFixed(1)}%)`).join("\n");
   const mismoPartido=combinada.filter((a,i,arr)=>arr.findIndex(b=>b.e1===a.e1&&b.e2===a.e2)===i).length<combinada.length;
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:500,system:"Analista fútbol. Español conciso, sin asteriscos.",messages:[{role:"user",content:`Combinada Mundial 2026:\n${resumen}\nProb. conjunta: ${pt.toFixed(2)}%${mismoPartido?" (correlación real aplicada)":""}\n1)¿Conflictos lógicos? 2)¿Correlaciones positivas? 3)Valoración global 4)Recomendación en 1 línea`}]})});
+    const resp=await fetch("/.netlify/functions/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:500,system:"Analista fútbol. Español conciso, sin asteriscos.",messages:[{role:"user",content:`Combinada Mundial 2026:\n${resumen}\nProb. conjunta: ${pt.toFixed(2)}%${mismoPartido?" (correlación real aplicada)":""}\n1)¿Conflictos lógicos? 2)¿Correlaciones positivas? 3)Valoración global 4)Recomendación en 1 línea`}]})});
     const d=await resp.json();
     const txt=d.content?.find(b=>b.type==="text")?.text||"Sin respuesta.";
     document.getElementById("combo-ai-box").innerHTML=`<div style="background:rgba(0,105,92,.1);border:1px solid rgba(0,105,92,.35);border-radius:8px;padding:12px;margin-top:8px" class="fade"><div style="font-size:8px;letter-spacing:2px;color:${C.green};margin-bottom:8px;font-family:'Barlow',sans-serif">🤖 ANÁLISIS COMBINADA · CLAUDE</div><div style="font-size:11px;line-height:1.7;font-family:'Barlow',sans-serif;color:#c4d9f0;white-space:pre-line">${txt}</div></div>`;
