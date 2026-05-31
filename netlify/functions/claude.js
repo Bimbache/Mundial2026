@@ -1,4 +1,5 @@
-javascriptconst https = require('https');
+
+const https = require('https');
 
 exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') {
