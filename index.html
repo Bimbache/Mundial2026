@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -303,7 +304,7 @@ async function buscarNoticias(eq1,eq2){
   nb.style.display="block";
   nb.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:rgba(0,180,100,.08);border:1px solid rgba(0,180,100,.2);border-radius:8px;padding:8px 12px;margin-bottom:10px"><div style="width:12px;height:12px;border:2px solid ${C.green};border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0"></div><span style="font-size:10px;color:${C.green};font-family:'Barlow',sans-serif">Buscando lesiones y bajas...</span></div>`;
   try{
-    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,system:"Analista fútbol. Responde SOLO en JSON sin texto extra ni markdown.",tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:`Busca noticias MUY RECIENTES (últimos 7 días) sobre bajas, lesiones y sanciones de ${eq1} y ${eq2} de cara al Mundial 2026. Responde SOLO este JSON:\n{"bajas1":["jugador(motivo)"],"bajas2":["jugador(motivo)"],"factor1":1.0,"factor2":1.0,"resumen":"1 línea clave"}\nfactor=multiplicador xG: 0.85=baja muy importante(titular estrella), 0.90=baja importante, 0.95=baja moderada, 1.0=sin bajas. Si no encuentras noticias relevantes devuelve factores 1.0 y arrays vacíos.`}]})});
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,system:"Analista fútbol. Responde SOLO en JSON sin texto extra ni markdown.",messages:[{role:"user",content:`Basándote en tu conocimiento sobre ${eq1} y ${eq2} para el Mundial 2026: indica bajas, lesiones o sanciones conocidas. JSON:\n{"bajas1":["jugador(motivo)"],"bajas2":["jugador(motivo)"],"factor1":1.0,"factor2":1.0,"resumen":"1 línea"}\nfactor=multiplicador xG: 0.85=baja estrella, 0.90=baja importante, 0.95=moderada, 1.0=sin bajas.`}]})});
     const d=await r.json();
     const txt=d.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"{}";
     let parsed;try{parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());}catch{parsed={bajas1:[],bajas2:[],factor1:1.0,factor2:1.0,resumen:"Sin noticias relevantes."};}
@@ -610,5 +611,3 @@ function olvidarKey(){
 </script>
 </body>
 </html>
-
-
