@@ -1,4 +1,3 @@
-
 const https = require('https');
 
 exports.handler = async function(event) {
@@ -11,9 +10,12 @@ exports.handler = async function(event) {
     return {
       statusCode: 500,
       headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'API key not configured' })
+      body: JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' })
     };
   }
+
+  console.log('API key length:', apiKey.length);
+  console.log('Body length:', event.body ? event.body.length : 0);
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -26,16 +28,20 @@ exports.handler = async function(event) {
       body: event.body
     });
     
-    const data = await response.json();
+    const text = await response.text();
+    console.log('Status:', response.status);
+    console.log('Response:', text.substring(0, 300));
+    
     return {
       statusCode: response.status,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify(data)
+      body: text
     };
   } catch (err) {
+    console.log('Error:', err.message);
     return {
       statusCode: 500,
       headers: { 'Access-Control-Allow-Origin': '*' },
