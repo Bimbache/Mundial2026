@@ -1,32 +1,44 @@
-export default async function(req, context) {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
-  try {
-    const body = await req.text();
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: body,
-    });
-    const data = await res.json();
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
-    });
-  }
-}
+javascriptconst https = require('https');
 
-export const config = { path: "/.netlify/functions/claude" };
+exports.handler = async function(event) {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+  
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return {
+      statusCode: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: 'API key not configured' })
+    };
+  }
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: event.body
+    });
+    
+    const data = await response.json();
+    return {
+      statusCode: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(data)
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: err.message })
+    };
+  }
+};
